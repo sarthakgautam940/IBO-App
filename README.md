@@ -334,18 +334,3 @@ prisma/
 ---
 
 This repository now contains the production-ready architectural base and persistence model required to begin full implementation immediately.
-
-## Build reliability on Vercel / local
-
-To avoid `@prisma/client did not initialize yet` errors:
-- `postinstall` now runs `prisma generate` automatically.
-- `build` now runs `prisma generate && next build`.
-
-So local setup is simply:
-```bash
-npm install
-npm run build
-npm run dev
-```
-
-If your environment blocks npm registry access, you must run these on your local machine/CI with normal npm access.

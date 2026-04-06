@@ -3,15 +3,16 @@ import { resolveDatabaseUrl } from "@/lib/database-url";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-function createPrismaClient() {
-  const url = resolveDatabaseUrl();
-  return new PrismaClient({
-    ...(url ? { datasources: { db: { url } } } : {}),
-    log: ["error", "warn"]
-  });
+const resolved = resolveDatabaseUrl();
+if (resolved) {
+  process.env.DATABASE_URL = resolved;
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log: ["error", "warn"]
+  });
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;

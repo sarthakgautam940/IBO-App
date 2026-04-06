@@ -1,0 +1,265 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserSlug {
+  adhrit
+  sar
+}
+
+enum QuestionMode {
+  prelim
+  objective_case
+  mixed
+}
+
+enum CaseType {
+  objective
+  open
+}
+
+model User {
+  id           String           @id @default(cuid())
+  slug         UserSlug         @unique
+  displayName  String
+  passwordHash String
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  mastery      MasteryMetric?
+  reading      ReadingProgress[]
+  attempts     QuestionAttempt[]
+  weakAreas    WeakArea[]
+  reviewQueue  ReviewQueueItem[]
+  flashcards   UserFlashcard[]
+  dailyPlans   DailyPlan[]
+  caseSessions CaseSession[]
+  checkpoints  UserCheckpoint[]
+  notes        Note[]
+}
+
+model SyllabusModule {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  chapter     Int
+  orderIndex  Int
+  description String
+  lessons     Lesson[]
+  questions   Question[]
+}
+
+model Lesson {
+  id              String         @id @default(cuid())
+  moduleId        String
+  title           String
+  orderIndex      Int
+  estimatedMin    Int
+  masteryWeight   Float          @default(1)
+  conceptTags     String[]
+  linkedBookIds   String[]
+  module          SyllabusModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+}
+
+model Book {
+  id          String            @id @default(cuid())
+  title       String
+  author      String
+  sourceUrl   String?
+  orderIndex  Int
+  isCore      Boolean           @default(true)
+  sections    BookSection[]
+  readings    ReadingProgress[]
+}
+
+model BookSection {
+  id           String @id @default(cuid())
+  bookId       String
+  title        String
+  orderIndex   Int
+  estMinutes   Int
+  conceptTags  String[]
+  book         Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+}
+
+model ReadingProgress {
+  id              String   @id @default(cuid())
+  userId          String
+  bookId          String
+  sectionId       String?
+  progressPercent Float    @default(0)
+  minutesSpent    Int      @default(0)
+  completedAt     DateTime?
+  lastOpenedAt    DateTime?
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book            Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId, sectionId])
+}
+
+model Question {
+  id                String         @id @default(cuid())
+  moduleId          String
+  mode              QuestionMode
+  prompt            String
+  options           Json
+  correctAnswer     String
+  explanation       String
+  difficulty        Int
+  avgTargetSeconds  Int
+  conceptTags       String[]
+  module            SyllabusModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  attempts          QuestionAttempt[]
+}
+
+model QuestionAttempt {
+  id            String   @id @default(cuid())
+  userId        String
+  questionId    String
+  answeredAt    DateTime @default(now())
+  selected      String
+  isCorrect     Boolean
+  seconds       Int
+  confidence    Int?
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question       Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+model WeakArea {
+  id                 String   @id @default(cuid())
+  userId             String
+  conceptTag         String
+  severity           Float
+  lastSeenAt         DateTime @default(now())
+  resolved           Boolean  @default(false)
+  resolvedAt         DateTime?
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, conceptTag])
+}
+
+model Flashcard {
+  id          String   @id @default(cuid())
+  front       String
+  back        String
+  conceptTags String[]
+  sourceType  String
+  sourceRefId String?
+  users       UserFlashcard[]
+}
+
+model UserFlashcard {
+  id             String   @id @default(cuid())
+  userId         String
+  flashcardId    String
+  intervalDays   Int      @default(1)
+  easeFactor     Float    @default(2.5)
+  dueAt          DateTime
+  lastReviewedAt DateTime?
+  streak         Int      @default(0)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flashcard      Flashcard @relation(fields: [flashcardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, flashcardId])
+}
+
+model ReviewQueueItem {
+  id          String   @id @default(cuid())
+  userId      String
+  sourceType  String
+  sourceRefId String
+  reason      String
+  dueAt       DateTime
+  priority    Int      @default(50)
+  completedAt DateTime?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MeetingCheckpoint {
+  id               String   @id @default(cuid())
+  phase            Int
+  title            String
+  objective        String
+  gatingCriteria   Json
+  unlockWeek       Int
+  completedAt      DateTime?
+  completedBySlug  UserSlug?
+  userStatus       UserCheckpoint[]
+}
+
+model UserCheckpoint {
+  id            String   @id @default(cuid())
+  userId        String
+  checkpointId  String
+  ready         Boolean  @default(false)
+  readyAt       DateTime?
+  evidenceJson  Json
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  checkpoint    MeetingCheckpoint @relation(fields: [checkpointId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, checkpointId])
+}
+
+model DailyPlan {
+  id            String   @id @default(cuid())
+  userId        String
+  date          DateTime
+  tasksJson     Json
+  completedJson Json
+  generatedAt   DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
+
+model CaseSession {
+  id             String   @id @default(cuid())
+  userId         String
+  caseType       CaseType
+  caseSlug       String
+  score          Float?
+  timeSeconds    Int?
+  rubricJson     Json
+  startedAt      DateTime @default(now())
+  completedAt    DateTime?
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MasteryMetric {
+  id                      String   @id @default(cuid())
+  userId                  String   @unique
+  overall                 Float
+  prelimReadiness         Float
+  objectiveCaseReadiness  Float
+  openCaseReadiness       Float
+  presentationReadiness   Float
+  competitionReadiness    Float
+  topicBreakdownJson      Json?
+  updatedAt               DateTime @updatedAt
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AnalyticsSnapshot {
+  id              String   @id @default(cuid())
+  userId          String
+  snapshotDate    DateTime
+  metricsJson     Json
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, snapshotDate])
+}
+
+model Note {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  content     String
+  scope       String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

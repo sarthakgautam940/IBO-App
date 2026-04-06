@@ -21,8 +21,11 @@ export default async function ProfileAuthPage({
         <h1 className="text-2xl font-bold text-slate-900">{profileName} Access</h1>
         {error === "database" ? (
           <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-            Could not reach the database. Confirm <code className="font-mono text-xs">DATABASE_URL</code> is set on
-            Vercel and migrations have been applied.
+            Could not reach the database. In Vercel, link Storage → Postgres (or set{" "}
+            <code className="font-mono text-xs">DATABASE_URL</code>,{" "}
+            <code className="font-mono text-xs">POSTGRES_PRISMA_URL</code>, or{" "}
+            <code className="font-mono text-xs">POSTGRES_URL</code>
+            ), redeploy so migrations run, then try again.
           </p>
         ) : null}
         {error === "server" ? (

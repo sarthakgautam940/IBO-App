@@ -1,6 +1,9 @@
 import { hashPassword } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { publicOriginFromRequest } from "@/lib/public-origin";
 import { NextResponse } from "next/server";
+
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   const data = await req.formData();
@@ -22,23 +25,31 @@ export async function POST(req: Request) {
 
   const passwordHash = await hashPassword(password);
 
-  await prisma.user.create({
-    data: {
-      slug,
-      displayName: slug === "adhrit" ? "Adhrit" : "Sar",
-      passwordHash,
-      mastery: {
-        create: {
-          overall: 0,
-          prelimReadiness: 0,
-          objectiveCaseReadiness: 0,
-          openCaseReadiness: 0,
-          presentationReadiness: 0,
-          competitionReadiness: 0
+  try {
+    await prisma.user.create({
+      data: {
+        slug,
+        displayName: slug === "adhrit" ? "Adhrit" : "Sar",
+        passwordHash,
+        mastery: {
+          create: {
+            overall: 0,
+            prelimReadiness: 0,
+            objectiveCaseReadiness: 0,
+            openCaseReadiness: 0,
+            presentationReadiness: 0,
+            competitionReadiness: 0
+          }
         }
       }
-    }
-  });
+    });
+  } catch {
+    const origin = publicOriginFromRequest(req);
+    return NextResponse.redirect(
+      new URL(`/profile/${slug}?error=database`, origin)
+    );
+  }
 
-  return NextResponse.redirect(new URL(`/profile/${slug}`, req.url));
+  const origin = publicOriginFromRequest(req);
+  return NextResponse.redirect(new URL(`/profile/${slug}`, origin));
 }

@@ -2,16 +2,29 @@ import { notFound } from "next/navigation";
 
 type Slug = "adhrit" | "sar";
 
-export default async function ProfileAuthPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function ProfileAuthPage({
+  params,
+  searchParams
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ error?: string }>;
+}) {
   const { slug } = await params;
   if (slug !== "adhrit" && slug !== "sar") notFound();
 
+  const { error } = await searchParams;
   const profileName = slug === "adhrit" ? "Adhrit" : "Sar";
 
   return (
     <div className="grid min-h-screen place-items-center bg-slate-50 p-6">
       <div className="w-full max-w-md rounded-2xl border bg-white p-8 shadow-sm">
         <h1 className="text-2xl font-bold text-slate-900">{profileName} Access</h1>
+        {error === "database" ? (
+          <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            Could not reach the database. Confirm <code className="font-mono text-xs">DATABASE_URL</code> is set on
+            Vercel and migrations have been applied.
+          </p>
+        ) : null}
         <p className="mt-2 text-sm text-slate-600">
           First visit creates password permanently. Returning visits require password login.
         </p>

@@ -1,6 +1,9 @@
 import { createSessionToken, verifyPassword } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { publicOriginFromRequest } from "@/lib/public-origin";
 import { NextResponse } from "next/server";
+
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   const data = await req.formData();
@@ -22,7 +25,8 @@ export async function POST(req: Request) {
   }
 
   const token = await createSessionToken(user.id, user.slug);
-  const res = NextResponse.redirect(new URL("/dashboard", req.url));
+  const origin = publicOriginFromRequest(req);
+  const res = NextResponse.redirect(new URL("/dashboard", origin));
 
   res.cookies.set("ibo_session", token, {
     httpOnly: true,

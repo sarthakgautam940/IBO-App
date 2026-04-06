@@ -21,8 +21,18 @@ export default async function ProfileAuthPage({
         <h1 className="text-2xl font-bold text-slate-900">{profileName} Access</h1>
         {error === "database" ? (
           <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-            Could not reach the database. Confirm <code className="font-mono text-xs">DATABASE_URL</code> is set on
-            Vercel and migrations have been applied.
+            Could not reach the database. In the Vercel project, open <span className="font-medium">Settings →
+            Environment Variables</span> and confirm Postgres vars exist for <span className="font-medium">
+            Production</span> (e.g. <code className="font-mono text-xs">POSTGRES_PRISMA_URL</code>,{" "}
+            <code className="font-mono text-xs">POSTGRES_URL</code>). Under{" "}
+            <span className="font-medium">Storage</span>, ensure the database is linked to this project, then redeploy.
+          </p>
+        ) : null}
+        {error === "migrations" ? (
+          <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            Database is connected but tables are missing. Open the latest <span className="font-medium">Deployment →
+            Build logs</span> and check that <code className="font-mono text-xs">prisma migrate deploy</code> ran
+            without errors, then redeploy.
           </p>
         ) : null}
         {error === "server" ? (

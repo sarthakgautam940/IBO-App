@@ -1,4 +1,5 @@
 import { hashPassword } from "@/lib/auth";
+import { prismaAuthFailureResponse } from "@/lib/prisma-auth-redirect";
 import { prisma } from "@/lib/prisma";
 import { safePublicOrigin } from "@/lib/public-origin";
 import { NextResponse } from "next/server";
@@ -28,8 +29,8 @@ export async function POST(req: Request) {
   let existing;
   try {
     existing = await prisma.user.findUnique({ where: { slug } });
-  } catch {
-    return NextResponse.redirect(new URL(`/profile/${slug}?error=database`, origin));
+  } catch (e) {
+    return prismaAuthFailureResponse(slug, origin, e);
   }
 
   if (existing) {
@@ -61,8 +62,8 @@ export async function POST(req: Request) {
         }
       }
     });
-  } catch {
-    return NextResponse.redirect(new URL(`/profile/${slug}?error=database`, origin));
+  } catch (e) {
+    return prismaAuthFailureResponse(slug, origin, e);
   }
 
   return NextResponse.redirect(new URL(`/profile/${slug}`, origin));

@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "postinstall": "sh -c 'DATABASE_URL=\"${DATABASE_URL:-postgresql://build:build@127.0.0.1:5432/build?schema=public}\" prisma generate'",
-    "build": "sh -c 'DATABASE_URL=\"${DATABASE_URL:-postgresql://build:build@127.0.0.1:5432/build?schema=public}\" prisma generate' && sh -c 'if [ -n \"$VERCEL\" ] && [ -n \"$DATABASE_URL\" ]; then prisma migrate deploy; fi' && next build",
+    "build": "sh -c 'DATABASE_URL=\"${DATABASE_URL:-postgresql://build:build@127.0.0.1:5432/build?schema=public}\" prisma generate' && node scripts/vercel-prisma-migrate.cjs && next build",
     "start": "next start",
     "lint": "next lint",
     "prisma:generate": "sh -c 'DATABASE_URL=\"${DATABASE_URL:-postgresql://build:build@127.0.0.1:5432/build?schema=public}\" prisma generate'",

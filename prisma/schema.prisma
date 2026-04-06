@@ -40,6 +40,7 @@ model User {
   caseSessions CaseSession[]
   checkpoints  UserCheckpoint[]
   notes        Note[]
+  analyticsSnapshots AnalyticsSnapshot[]
 }
 
 model SyllabusModule {

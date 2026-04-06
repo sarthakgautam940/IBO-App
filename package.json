@@ -4,10 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "postinstall": "sh -c 'DATABASE_URL=\"${DATABASE_URL:-postgresql://build:build@127.0.0.1:5432/build?schema=public}\" prisma generate'",
+    "build": "sh -c 'DATABASE_URL=\"${DATABASE_URL:-postgresql://build:build@127.0.0.1:5432/build?schema=public}\" prisma generate' && sh -c 'if [ -n \"$VERCEL\" ] && [ -n \"$DATABASE_URL\" ]; then prisma migrate deploy; fi' && next build",
     "start": "next start",
     "lint": "next lint",
-    "prisma:generate": "prisma generate",
+    "prisma:generate": "sh -c 'DATABASE_URL=\"${DATABASE_URL:-postgresql://build:build@127.0.0.1:5432/build?schema=public}\" prisma generate'",
     "prisma:migrate": "prisma migrate deploy",
     "seed": "tsx prisma/seed.ts"
   },
@@ -16,7 +17,7 @@
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
     "jose": "^5.9.3",
-    "next": "15.0.4",
+    "next": "15.0.7",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "zod": "^3.24.1"

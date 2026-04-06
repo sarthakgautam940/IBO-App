@@ -1,3 +1,4 @@
+import { safePublicOrigin } from "@/lib/public-origin";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
@@ -9,7 +10,7 @@ export function middleware(req: NextRequest) {
 
   const session = req.cookies.get("ibo_session")?.value;
   if (!session) {
-    return NextResponse.redirect(new URL("/select", req.url));
+    return NextResponse.redirect(new URL("/select", safePublicOrigin(req)));
   }
 
   return NextResponse.next();

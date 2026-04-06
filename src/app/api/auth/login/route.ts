@@ -1,31 +1,53 @@
 import { createSessionToken, verifyPassword } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { publicOriginFromRequest } from "@/lib/public-origin";
+import { safePublicOrigin } from "@/lib/public-origin";
 import { NextResponse } from "next/server";
 
 export const maxDuration = 60;
 
+export function GET(req: Request) {
+  const origin = safePublicOrigin(req);
+  return NextResponse.redirect(new URL("/select", origin));
+}
+
 export async function POST(req: Request) {
+  const origin = safePublicOrigin(req);
   const data = await req.formData();
   const slug = String(data.get("slug") ?? "");
   const password = String(data.get("password") ?? "");
 
   if (!(slug === "adhrit" || slug === "sar")) {
-    return NextResponse.json({ error: "Invalid profile." }, { status: 400 });
+    return NextResponse.redirect(new URL("/select", origin));
   }
 
-  const user = await prisma.user.findUnique({ where: { slug } });
+  let user;
+  try {
+    user = await prisma.user.findUnique({ where: { slug } });
+  } catch {
+    return NextResponse.redirect(new URL(`/profile/${slug}?error=database`, origin));
+  }
+
   if (!user) {
-    return NextResponse.json({ error: "Profile not initialized." }, { status: 404 });
+    return NextResponse.redirect(new URL(`/profile/${slug}?error=not_initialized`, origin));
   }
 
-  const ok = await verifyPassword(password, user.passwordHash);
+  let ok: boolean;
+  try {
+    ok = await verifyPassword(password, user.passwordHash);
+  } catch {
+    return NextResponse.redirect(new URL(`/profile/${slug}?error=server`, origin));
+  }
   if (!ok) {
-    return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
+    return NextResponse.redirect(new URL(`/profile/${slug}?error=invalid`, origin));
   }
 
-  const token = await createSessionToken(user.id, user.slug);
-  const origin = publicOriginFromRequest(req);
+  let token: string;
+  try {
+    token = await createSessionToken(user.id, user.slug);
+  } catch {
+    return NextResponse.redirect(new URL(`/profile/${slug}?error=server`, origin));
+  }
+
   const res = NextResponse.redirect(new URL("/dashboard", origin));
 
   res.cookies.set("ibo_session", token, {

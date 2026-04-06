@@ -25,6 +25,32 @@ export default async function ProfileAuthPage({
             Vercel and migrations have been applied.
           </p>
         ) : null}
+        {error === "server" ? (
+          <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            Something went wrong while signing you in. Set <code className="font-mono text-xs">AUTH_SECRET</code> in
+            Vercel (a long random string) and redeploy, then try again.
+          </p>
+        ) : null}
+        {error === "validation" ? (
+          <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            Passwords must match and be at least 10 characters.
+          </p>
+        ) : null}
+        {error === "already" ? (
+          <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            This profile is already set up. Use <span className="font-medium">Continue</span> with your password.
+          </p>
+        ) : null}
+        {error === "not_initialized" ? (
+          <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            No password yet for this profile. Use <span className="font-medium">First-time setup</span> first.
+          </p>
+        ) : null}
+        {error === "invalid" ? (
+          <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            That password is incorrect. Try again.
+          </p>
+        ) : null}
         <p className="mt-2 text-sm text-slate-600">
           First visit creates password permanently. Returning visits require password login.
         </p>

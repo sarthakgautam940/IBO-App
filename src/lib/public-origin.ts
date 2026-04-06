@@ -19,3 +19,19 @@ export function publicOriginFromRequest(req: Request): string {
   }
   return new URL(req.url).origin;
 }
+
+/** Same as publicOriginFromRequest but never throws (e.g. bad NEXT_PUBLIC_APP_URL). */
+export function safePublicOrigin(req: Request): string {
+  try {
+    return publicOriginFromRequest(req);
+  } catch {
+    if (process.env.VERCEL_URL) {
+      return `https://${process.env.VERCEL_URL}`;
+    }
+    try {
+      return new URL(req.url).origin;
+    } catch {
+      return "http://localhost:3000";
+    }
+  }
+}

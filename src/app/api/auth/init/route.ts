@@ -2,6 +2,7 @@ import { hashPassword } from "@/lib/auth";
 import { createUserWithMastery, findUserBySlug } from "@/lib/db-auth";
 import { authDbFailureRedirect } from "@/lib/db-error-redirect";
 import { getNeonSql } from "@/lib/neon-sql";
+import { redirectAfterForm } from "@/lib/redirect-after-form";
 import { safePublicOrigin } from "@/lib/public-origin";
 import { NextResponse } from "next/server";
 
@@ -20,14 +21,14 @@ export async function POST(req: Request) {
   const confirmPassword = String(data.get("confirmPassword") ?? "");
 
   if (!(slug === "adhrit" || slug === "sar")) {
-    return NextResponse.redirect(new URL("/select", origin));
+    return redirectAfterForm(new URL("/select", origin));
   }
   if (password !== confirmPassword || password.length < 10) {
-    return NextResponse.redirect(new URL(`/profile/${slug}?error=validation`, origin));
+    return redirectAfterForm(new URL(`/profile/${slug}?error=validation`, origin));
   }
 
   if (!getNeonSql()) {
-    return NextResponse.redirect(new URL(`/profile/${slug}?error=database`, origin));
+    return redirectAfterForm(new URL(`/profile/${slug}?error=database`, origin));
   }
 
   let existing;
@@ -38,14 +39,14 @@ export async function POST(req: Request) {
   }
 
   if (existing) {
-    return NextResponse.redirect(new URL(`/profile/${slug}?error=already`, origin));
+    return redirectAfterForm(new URL(`/profile/${slug}?error=already`, origin));
   }
 
   let passwordHash: string;
   try {
     passwordHash = await hashPassword(password);
   } catch {
-    return NextResponse.redirect(new URL(`/profile/${slug}?error=server`, origin));
+    return redirectAfterForm(new URL(`/profile/${slug}?error=server`, origin));
   }
 
   try {
@@ -58,5 +59,5 @@ export async function POST(req: Request) {
     return authDbFailureRedirect(slug, origin, e);
   }
 
-  return NextResponse.redirect(new URL(`/profile/${slug}`, origin));
+  return redirectAfterForm(new URL(`/profile/${slug}`, origin));
 }

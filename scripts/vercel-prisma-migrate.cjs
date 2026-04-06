@@ -14,6 +14,18 @@ function pick(...names) {
   return "";
 }
 
+function composeFromParts() {
+  const host = process.env.POSTGRES_HOST?.trim();
+  const user = process.env.POSTGRES_USER?.trim();
+  const password = process.env.POSTGRES_PASSWORD;
+  const database = process.env.POSTGRES_DATABASE?.trim();
+  if (!host || !user || password === undefined || !database) return "";
+
+  const port = process.env.POSTGRES_PORT?.trim() || "5432";
+  const enc = encodeURIComponent;
+  return `postgresql://${enc(user)}:${enc(password)}@${host}:${port}/${enc(database)}`;
+}
+
 /** Prefer direct URL so migrate deploy works with pgBouncer-style poolers. */
 const migrateUrl =
   pick(
@@ -24,7 +36,7 @@ const migrateUrl =
     "NEON_DATABASE_URL",
     "POSTGRES_PRISMA_URL",
     "POSTGRES_URL"
-  ) || "";
+  ) || composeFromParts();
 
 if (!migrateUrl) {
   process.exit(0);

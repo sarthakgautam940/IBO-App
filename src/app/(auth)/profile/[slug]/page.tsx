@@ -28,7 +28,11 @@ export default async function ProfileAuthPage({
             <code className="font-mono text-xs">POSTGRES_PRISMA_URL</code>,{" "}
             <code className="font-mono text-xs">POSTGRES_URL</code>, or{" "}
             <code className="font-mono text-xs">NEON_DATABASE_URL</code>
-            ). Link Storage → Postgres to this project, then redeploy.
+            ), or the split vars <code className="font-mono text-xs">POSTGRES_HOST</code>,{" "}
+            <code className="font-mono text-xs">POSTGRES_USER</code>,{" "}
+            <code className="font-mono text-xs">POSTGRES_PASSWORD</code>,{" "}
+            <code className="font-mono text-xs">POSTGRES_DATABASE</code>. Link Storage → Postgres to this project, then
+            redeploy.
           </p>
         ) : null}
         {error === "migrations" ? (

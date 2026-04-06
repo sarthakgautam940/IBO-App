@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "postinstall": "prisma generate",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && sh -c 'if [ -n \"$VERCEL\" ]; then prisma migrate deploy; fi' && next build",
     "start": "next start",
     "lint": "next lint",
     "prisma:generate": "prisma generate",

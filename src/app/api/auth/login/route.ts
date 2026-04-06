@@ -1,6 +1,7 @@
 import { createSessionToken, verifyPassword } from "@/lib/auth";
-import { prismaAuthFailureResponse } from "@/lib/prisma-auth-redirect";
-import { prisma } from "@/lib/prisma";
+import { findUserBySlug } from "@/lib/db-auth";
+import { authDbFailureRedirect } from "@/lib/db-error-redirect";
+import { getNeonSql } from "@/lib/neon-sql";
 import { safePublicOrigin } from "@/lib/public-origin";
 import { NextResponse } from "next/server";
 
@@ -14,18 +15,22 @@ export function GET(req: Request) {
 export async function POST(req: Request) {
   const origin = safePublicOrigin(req);
   const data = await req.formData();
-  const slug = String(data.get("slug") ?? "");
+  const slug = String(data.get("slug") ?? "") as "adhrit" | "sar";
   const password = String(data.get("password") ?? "");
 
   if (!(slug === "adhrit" || slug === "sar")) {
     return NextResponse.redirect(new URL("/select", origin));
   }
 
+  if (!getNeonSql()) {
+    return NextResponse.redirect(new URL(`/profile/${slug}?error=database`, origin));
+  }
+
   let user;
   try {
-    user = await prisma.user.findUnique({ where: { slug } });
+    user = await findUserBySlug(slug);
   } catch (e) {
-    return prismaAuthFailureResponse(slug, origin, e);
+    return authDbFailureRedirect(slug, origin, e);
   }
 
   if (!user) {

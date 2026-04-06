@@ -21,6 +21,7 @@ const migrateUrl =
     "DATABASE_URL_UNPOOLED",
     "DIRECT_URL",
     "DATABASE_URL",
+    "NEON_DATABASE_URL",
     "POSTGRES_PRISMA_URL",
     "POSTGRES_URL"
   ) || "";

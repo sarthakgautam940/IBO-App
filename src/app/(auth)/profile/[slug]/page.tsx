@@ -21,11 +21,14 @@ export default async function ProfileAuthPage({
         <h1 className="text-2xl font-bold text-slate-900">{profileName} Access</h1>
         {error === "database" ? (
           <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-            Could not reach the database. In the Vercel project, open <span className="font-medium">Settings →
-            Environment Variables</span> and confirm Postgres vars exist for <span className="font-medium">
-            Production</span> (e.g. <code className="font-mono text-xs">POSTGRES_PRISMA_URL</code>,{" "}
-            <code className="font-mono text-xs">POSTGRES_URL</code>). Under{" "}
-            <span className="font-medium">Storage</span>, ensure the database is linked to this project, then redeploy.
+            Could not reach the database. In Vercel, open <span className="font-medium">Settings → Environment
+            Variables</span> and confirm a Postgres connection string exists for{" "}
+            <span className="font-medium">Production</span> (e.g.{" "}
+            <code className="font-mono text-xs">DATABASE_URL</code>,{" "}
+            <code className="font-mono text-xs">POSTGRES_PRISMA_URL</code>,{" "}
+            <code className="font-mono text-xs">POSTGRES_URL</code>, or{" "}
+            <code className="font-mono text-xs">NEON_DATABASE_URL</code>
+            ). Link Storage → Postgres to this project, then redeploy.
           </p>
         ) : null}
         {error === "migrations" ? (

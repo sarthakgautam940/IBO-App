@@ -1,12 +1,12 @@
 import { hashPassword } from "@/lib/auth";
-import { prismaAuthFailureResponse } from "@/lib/prisma-auth-redirect";
-import { prisma } from "@/lib/prisma";
+import { createUserWithMastery, findUserBySlug } from "@/lib/db-auth";
+import { authDbFailureRedirect } from "@/lib/db-error-redirect";
+import { getNeonSql } from "@/lib/neon-sql";
 import { safePublicOrigin } from "@/lib/public-origin";
 import { NextResponse } from "next/server";
 
 export const maxDuration = 60;
 
-/** Browsers that land on the API URL (refresh, bad redirect) go back to the app. */
 export function GET(req: Request) {
   const origin = safePublicOrigin(req);
   return NextResponse.redirect(new URL("/select", origin));
@@ -15,7 +15,7 @@ export function GET(req: Request) {
 export async function POST(req: Request) {
   const origin = safePublicOrigin(req);
   const data = await req.formData();
-  const slug = String(data.get("slug") ?? "");
+  const slug = String(data.get("slug") ?? "") as "adhrit" | "sar";
   const password = String(data.get("password") ?? "");
   const confirmPassword = String(data.get("confirmPassword") ?? "");
 
@@ -26,11 +26,15 @@ export async function POST(req: Request) {
     return NextResponse.redirect(new URL(`/profile/${slug}?error=validation`, origin));
   }
 
+  if (!getNeonSql()) {
+    return NextResponse.redirect(new URL(`/profile/${slug}?error=database`, origin));
+  }
+
   let existing;
   try {
-    existing = await prisma.user.findUnique({ where: { slug } });
+    existing = await findUserBySlug(slug);
   } catch (e) {
-    return prismaAuthFailureResponse(slug, origin, e);
+    return authDbFailureRedirect(slug, origin, e);
   }
 
   if (existing) {
@@ -45,25 +49,13 @@ export async function POST(req: Request) {
   }
 
   try {
-    await prisma.user.create({
-      data: {
-        slug,
-        displayName: slug === "adhrit" ? "Adhrit" : "Sar",
-        passwordHash,
-        mastery: {
-          create: {
-            overall: 0,
-            prelimReadiness: 0,
-            objectiveCaseReadiness: 0,
-            openCaseReadiness: 0,
-            presentationReadiness: 0,
-            competitionReadiness: 0
-          }
-        }
-      }
+    await createUserWithMastery({
+      slug,
+      displayName: slug === "adhrit" ? "Adhrit" : "Sar",
+      passwordHash
     });
   } catch (e) {
-    return prismaAuthFailureResponse(slug, origin, e);
+    return authDbFailureRedirect(slug, origin, e);
   }
 
   return NextResponse.redirect(new URL(`/profile/${slug}`, origin));

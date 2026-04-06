@@ -1,4 +1,5 @@
-import { prisma } from "@/lib/prisma";
+import { completeMeetingCheckpoint } from "@/lib/db-checkpoints";
+import { getNeonSql } from "@/lib/neon-sql";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -7,13 +8,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing fields." }, { status: 400 });
   }
 
-  const checkpoint = await prisma.meetingCheckpoint.update({
-    where: { id: body.checkpointId },
-    data: {
-      completedAt: new Date(),
-      completedBySlug: body.completedBySlug
-    }
-  });
+  if (!getNeonSql()) {
+    return NextResponse.json({ error: "Database not configured." }, { status: 503 });
+  }
 
-  return NextResponse.json({ checkpoint });
+  try {
+    const checkpoint = await completeMeetingCheckpoint({
+      checkpointId: body.checkpointId,
+      completedBySlug: body.completedBySlug
+    });
+    if (!checkpoint) {
+      return NextResponse.json({ error: "Checkpoint not found." }, { status: 404 });
+    }
+    return NextResponse.json({ checkpoint });
+  } catch {
+    return NextResponse.json({ error: "Database error." }, { status: 503 });
+  }
 }

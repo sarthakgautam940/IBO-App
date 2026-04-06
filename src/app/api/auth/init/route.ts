@@ -1,9 +1,8 @@
 import { hashPassword } from "@/lib/auth";
-import { getPrismaClient } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const prisma = await getPrismaClient();
   const data = await req.formData();
   const slug = String(data.get("slug") ?? "");
   const password = String(data.get("password") ?? "");

@@ -1,21 +1,13 @@
-import type { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __iboPrisma: PrismaClient | undefined;
-}
+const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-export async function getPrismaClient(): Promise<PrismaClient> {
-  if (global.__iboPrisma) return global.__iboPrisma;
-
-  const { PrismaClient } = await import("@prisma/client");
-  const client = new PrismaClient({
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
     log: ["error", "warn"]
   });
 
-  if (process.env.NODE_ENV !== "production") {
-    global.__iboPrisma = client;
-  }
-
-  return client;
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
 }

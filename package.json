@@ -4,11 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "postinstall": "prisma generate",
-    "build": "prisma generate && sh -c 'if [ -n \"$VERCEL\" ]; then prisma migrate deploy; fi' && next build",
+    "postinstall": "sh -c 'DATABASE_URL=\"${DATABASE_URL:-postgresql://build:build@127.0.0.1:5432/build?schema=public}\" prisma generate'",
+    "build": "sh -c 'DATABASE_URL=\"${DATABASE_URL:-postgresql://build:build@127.0.0.1:5432/build?schema=public}\" prisma generate' && sh -c 'if [ -n \"$VERCEL\" ] && [ -n \"$DATABASE_URL\" ]; then prisma migrate deploy; fi' && next build",
     "start": "next start",
     "lint": "next lint",
-    "prisma:generate": "prisma generate",
+    "prisma:generate": "sh -c 'DATABASE_URL=\"${DATABASE_URL:-postgresql://build:build@127.0.0.1:5432/build?schema=public}\" prisma generate'",
     "prisma:migrate": "prisma migrate deploy",
     "seed": "tsx prisma/seed.ts"
   },
